@@ -11,6 +11,10 @@ public class GameSystemManager : MonoBehaviour
 
     GameObject networkedClient;
 
+    GameObject findGameSessionButton, placeHolderGameButton;
+
+    GameObject infoStuff1, infoStuff2;
+
     void Start()
     {
         GameObject[] allObjects = UnityEngine.Object.FindObjectsOfType<GameObject>();
@@ -29,22 +33,46 @@ public class GameSystemManager : MonoBehaviour
                 toggleCreate = go;
             else if (go.name == "NetworkedClient")
                 networkedClient = go;
+            else if (go.name == "FindGameSessionButton")
+                findGameSessionButton = go;
+            else if (go.name == "PlaceHolderGameButton")
+                placeHolderGameButton = go;
+            else if (go.name == "InfoText1")
+                infoStuff1 = go;
+            else if (go.name == "InfoText2")
+                infoStuff2 = go;
 
-          
+
         }
 
         buttonSubmit.GetComponent<Button>().onClick.AddListener(SubmitButtonPressed);
         toggleCreate.GetComponent<Toggle>().onValueChanged.AddListener(ToggleCreateValueChanged);
         toggleLogin.GetComponent<Toggle>().onValueChanged.AddListener(ToggleLoginValueChanged);
+
+        findGameSessionButton.GetComponent<Button>().onClick.AddListener(FindGameSessionButtonPressed);
+        placeHolderGameButton.GetComponent<Button>().onClick.AddListener(PlaceHolderGameButtonPressed);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
+
+        /*  if (Input.GetKeyDown(KeyCode.A))
+            ChangeGameState(GameStates.Login);
+
+        if (Input.GetKeyDown(KeyCode.S))
+            ChangeGameState(GameStates.MainMenu);
+
+        if (Input.GetKeyDown(KeyCode.D))
+            ChangeGameState(GameStates.WaitingForMatch);
+
+        if (Input.GetKeyDown(KeyCode.F))
+            ChangeGameState(GameStates.PlayingTicTacToe); */
+
     }
 
-    public void SubmitButtonPressed()
+    private void SubmitButtonPressed()
     {
 
         string n = inputFieldUserName.GetComponent<InputField>().text;
@@ -56,20 +84,79 @@ public class GameSystemManager : MonoBehaviour
             networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.CreateAccount + "," + n + "," + p);
         
 
-      
 
     }
 
-    public void ToggleCreateValueChanged(bool newValue)
+    private void ToggleCreateValueChanged(bool newValue)
     {
         toggleLogin.GetComponent<Toggle>().SetIsOnWithoutNotify(!newValue);
     }
 
-    public void ToggleLoginValueChanged(bool newValue)
+    private void ToggleLoginValueChanged(bool newValue)
     {
         toggleCreate.GetComponent<Toggle>().SetIsOnWithoutNotify(!newValue);
     }
 
+    private void FindGameSessionButtonPressed()
+    {
+
+    }
+
+    private void PlaceHolderGameButtonPressed()
+    {
+
+    }
+
+    public void ChangeGameState(int newState)
+    {
+        //inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate
+        // findGameSessionButton, placeHolderGameButton
+
+        inputFieldUserName.SetActive(false);
+        inputFieldPassword.SetActive(false);
+        buttonSubmit.SetActive(false);
+        toggleLogin.SetActive(false);
+        toggleCreate.SetActive(false);
+        findGameSessionButton.SetActive(false);
+        placeHolderGameButton.SetActive(false);
+        infoStuff1.SetActive(false);
+        infoStuff2.SetActive(false);
+
+        if (newState == GameStates.Login)
+        {
+            inputFieldUserName.SetActive(true);
+            inputFieldPassword.SetActive(true);
+            buttonSubmit.SetActive(true);
+            toggleLogin.SetActive(true);
+            toggleCreate.SetActive(true);
+            infoStuff1.SetActive(true);
+            infoStuff2.SetActive(true);
+
+        }
+        else if(newState == GameStates.MainMenu)
+        {
+            findGameSessionButton.SetActive(true);
+        }
+        else if (newState == GameStates.WaitingForMatch)
+        {
+
+        }
+        else if (newState == GameStates.PlayingTicTacToe)
+        {
+            placeHolderGameButton.SetActive(true);
+        }
+
+    }
+}
+public static class GameStates
+{
+    public const int Login = 1;
+
+    public const int MainMenu = 2;
+
+    public const int WaitingForMatch = 3;
+
+    public const int PlayingTicTacToe = 4;
 }
 
 public static class ClientToServerSignifiers
