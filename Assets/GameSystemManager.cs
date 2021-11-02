@@ -51,6 +51,8 @@ public class GameSystemManager : MonoBehaviour
 
         findGameSessionButton.GetComponent<Button>().onClick.AddListener(FindGameSessionButtonPressed);
         placeHolderGameButton.GetComponent<Button>().onClick.AddListener(PlaceHolderGameButtonPressed);
+
+        ChangeGameState(GameStates.Login);
     }
 
     // Update is called once per frame
@@ -99,12 +101,13 @@ public class GameSystemManager : MonoBehaviour
 
     private void FindGameSessionButtonPressed()
     {
-
+        networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.AddToGameSessionQueue + "" );
+        ChangeGameState(GameStates.WaitingForMatch);
     }
 
     private void PlaceHolderGameButtonPressed()
     {
-
+        networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.TicTacToePlay + "");
     }
 
     public void ChangeGameState(int newState)
@@ -159,27 +162,3 @@ public static class GameStates
     public const int PlayingTicTacToe = 4;
 }
 
-public static class ClientToServerSignifiers
-{
-    public const int Login = 1;
-
-    public const int CreateAccount = 2;
-}
-
-
-public static class ServerToClientSignifiers
-{
-    public const int LoginResponse = 1;
-
-}
-
-public static class LoginResponses
-{
-    public const int Success = 1;
-
-    public const int FailureNameInUse = 2;
-
-    public const int FailureNameNotFound = 3;
-
-    public const int FailureIncorrectPassword = 4;
-}

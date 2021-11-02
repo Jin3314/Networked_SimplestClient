@@ -16,11 +16,19 @@ public class NetworkedClient : MonoBehaviour
     byte error;
     bool isConnected = false;
     int ourClientID;
+    GameObject gameSystemManager;
 
     // Start is called before the first frame update
     void Start()
     {
-        Connect();
+        GameObject[] allObjects = UnityEngine.Object.FindObjectsOfType<GameObject>();
+
+        foreach (GameObject go in allObjects)
+        {
+            if (go.name == "GameManager")
+                gameSystemManager = go;
+        }
+            Connect();
     }
 
     // Update is called once per frame
@@ -105,6 +113,27 @@ public class NetworkedClient : MonoBehaviour
     private void ProcessRecievedMsg(string msg, int id) 
     {
         Debug.Log("msg recieved = " + msg + ".  connection id = " + id);
+
+        string[] csv = msg.Split(',');
+
+        int signifier = int.Parse(csv[0]);
+
+        if(signifier == ServerToClientSignifiers.LoginResponse)
+        {
+            int loginResultSignifier = int.Parse(csv[1]);
+
+            if (loginResultSignifier == LoginResponses.Success)
+                gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.MainMenu);
+        }
+        else if(signifier == ServerToClientSignifiers.GameSessionStarted)
+        {
+            gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.PlayingTicTacToe);
+        }
+        else if (signifier == ServerToClientSignifiers.OpponentTicTacToePlay)
+        {
+            Debug.Log("our next action item no longer beckons!");
+        }
+            
     }
 
     public bool IsConnected()
@@ -113,6 +142,38 @@ public class NetworkedClient : MonoBehaviour
     }
 
 
+}
+
+public static class ClientToServerSignifiers
+{
+    public const int Login = 1;
+
+    public const int CreateAccount = 2;
+
+    public const int AddToGameSessionQueue = 3;
+
+    public const int TicTacToePlay = 4;
+}
+
+
+public static class ServerToClientSignifiers
+{
+    public const int LoginResponse = 1;
+
+    public const int GameSessionStarted = 2;
+
+    public const int OpponentTicTacToePlay = 3;
+}
+
+public static class LoginResponses
+{
+    public const int Success = 1;
+
+    public const int FailureNameInUse = 2;
+
+    public const int FailureNameNotFound = 3;
+
+    public const int FailureIncorrectPassword = 4;
 }
 
 
