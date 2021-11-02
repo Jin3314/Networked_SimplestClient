@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
 public class GameSystemManager : MonoBehaviour
 {
 
@@ -26,7 +27,8 @@ public class GameSystemManager : MonoBehaviour
         }
 
         buttonSubmit.GetComponent<Button>().onClick.AddListener(SubmitButtonPressed);
-
+        toggleCreate.GetComponent<Toggle>().onValueChanged.AddListener(ToggleCreateValueChanged);
+        toggleLogin.GetComponent<Toggle>().onValueChanged.AddListener(ToggleLoginValueChanged);
     }
 
     // Update is called once per frame
@@ -38,6 +40,16 @@ public class GameSystemManager : MonoBehaviour
     public void SubmitButtonPressed()
     {
         Debug.Log("we good!");
+    }
+
+    public void ToggleCreateValueChanged(bool newValue)
+    {
+        toggleLogin.GetComponent<Toggle>().SetIsOnWithoutNotify(!newValue);
+    }
+
+    public void ToggleLoginValueChanged(bool newValue)
+    {
+        toggleCreate.GetComponent<Toggle>().SetIsOnWithoutNotify(!newValue);
     }
 
 }
