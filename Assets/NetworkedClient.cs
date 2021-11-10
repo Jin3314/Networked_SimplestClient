@@ -127,11 +127,11 @@ public class NetworkedClient : MonoBehaviour
         }
         else if(signifier == ServerToClientSignifiers.GameSessionStarted)
         {
-            gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.PlayingTicTacToe);
+            gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.PressTicTacToe);
         }
         else if (signifier == ServerToClientSignifiers.OpponentTicTacToePlay)
         {
-            Debug.Log("our next action item no longer beckons!");
+            gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.PlayingTicTacToe);
         }
             
     }

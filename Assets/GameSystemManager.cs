@@ -13,7 +13,7 @@ public class GameSystemManager : MonoBehaviour
 
     GameObject findGameSessionButton, placeHolderGameButton;
 
-    GameObject infoStuff1, infoStuff2;
+    GameObject infoStuff1, infoStuff2, tictactoeScene;
 
     void Start()
     {
@@ -41,6 +41,8 @@ public class GameSystemManager : MonoBehaviour
                 infoStuff1 = go;
             else if (go.name == "InfoText2")
                 infoStuff2 = go;
+            else if (go.name == "TicTacToe")
+                tictactoeScene = go;
 
 
         }
@@ -108,6 +110,7 @@ public class GameSystemManager : MonoBehaviour
     private void PlaceHolderGameButtonPressed()
     {
         networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.TicTacToePlay + "");
+        Debug.Log("playing game");
     }
 
     public void ChangeGameState(int newState)
@@ -124,6 +127,7 @@ public class GameSystemManager : MonoBehaviour
         placeHolderGameButton.SetActive(false);
         infoStuff1.SetActive(false);
         infoStuff2.SetActive(false);
+        tictactoeScene.SetActive(false);
 
         if (newState == GameStates.Login)
         {
@@ -144,9 +148,16 @@ public class GameSystemManager : MonoBehaviour
         {
 
         }
-        else if (newState == GameStates.PlayingTicTacToe)
+        else if (newState == GameStates.PressTicTacToe)
         {
             placeHolderGameButton.SetActive(true);
+            
+        }
+        else if (newState == GameStates.PlayingTicTacToe)
+        {
+           
+            tictactoeScene.SetActive(true); ;
+
         }
 
     }
@@ -159,6 +170,8 @@ public static class GameStates
 
     public const int WaitingForMatch = 3;
 
-    public const int PlayingTicTacToe = 4;
+    public const int PressTicTacToe = 4;
+
+    public const int PlayingTicTacToe = 5;
 }
 
