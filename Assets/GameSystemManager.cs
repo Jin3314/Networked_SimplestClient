@@ -7,13 +7,17 @@ using UnityEngine.UI;
 public class GameSystemManager : MonoBehaviour
 {
 
-    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate;
+    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeBoard;
 
     GameObject networkedClient;
 
     GameObject findGameSessionButton, placeHolderGameButton;
 
     GameObject infoStuff1, infoStuff2, tictactoeScene;
+
+    public Button[] ticTacToeButtonCellArray;
+    string playersTicTacToeSymbol, opponentsTicTacToeSymbol;
+    public bool myTurnToMove;
 
     void Start()
     {
@@ -43,7 +47,8 @@ public class GameSystemManager : MonoBehaviour
                 infoStuff2 = go;
             else if (go.name == "TicTacToe")
                 tictactoeScene = go;
-
+            else if (go.name == "TicTacToeBoard")
+                ticTacToeBoard = go;
 
         }
 
@@ -53,6 +58,8 @@ public class GameSystemManager : MonoBehaviour
 
         findGameSessionButton.GetComponent<Button>().onClick.AddListener(FindGameSessionButtonPressed);
         placeHolderGameButton.GetComponent<Button>().onClick.AddListener(PlaceHolderGameButtonPressed);
+
+        ticTacToeButtonCellArray = ticTacToeBoard.GetComponentsInChildren<Button>();
 
         ChangeGameState(GameStates.Login);
     }
@@ -155,7 +162,6 @@ public class GameSystemManager : MonoBehaviour
         }
         else if (newState == GameStates.PlayingTicTacToe)
         {
-           
             tictactoeScene.SetActive(true); ;
 
         }
