@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using TMPro;
 
 public class NetworkedClient : MonoBehaviour
 {
@@ -125,15 +126,29 @@ public class NetworkedClient : MonoBehaviour
             if (loginResultSignifier == LoginResponses.Success)
                 gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.MainMenu);
         }
-        else if(signifier == ServerToClientSignifiers.GameSessionStarted)
+        else if (signifier == ServerToClientSignifiers.GameSessionStarted)
         {
-            gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.PressTicTacToe);
+            gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.PlayingTicTacToe);
+
+            string opponentsSymbol = (csv[1] == "X") ? "O" : "X";
+
+            bool myTurn = (int.Parse(csv[2]) == 1) ? true : false;
+
+            gameSystemManager.GetComponent<GameSystemManager>().InitGameSymbolsSetCurrentTurn(csv[1], opponentsSymbol, myTurn);
         }
         else if (signifier == ServerToClientSignifiers.OpponentTicTacToePlay)
         {
-            gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.PlayingTicTacToe);
+        
         }
-            
+        else if (signifier == ServerToClientSignifiers.OpponentChoice)
+        {
+            int cellNumberOfMovePlayed = int.Parse(csv[1]);
+
+            gameSystemManager.GetComponent<GameSystemManager>().UpdateTicTacToeGridAfterMove(cellNumberOfMovePlayed);
+
+            gameSystemManager.GetComponent<GameSystemManager>().MoveP = true;
+        }
+
     }
 
     public bool IsConnected()
@@ -153,6 +168,8 @@ public static class ClientToServerSignifiers
     public const int AddToGameSessionQueue = 3;
 
     public const int TicTacToePlay = 4;
+
+    public const int AnyMove = 5;
 }
 
 
@@ -163,6 +180,8 @@ public static class ServerToClientSignifiers
     public const int GameSessionStarted = 2;
 
     public const int OpponentTicTacToePlay = 3;
+
+    public const int OpponentChoice = 4;
 }
 
 public static class LoginResponses

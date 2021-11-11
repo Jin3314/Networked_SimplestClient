@@ -2,12 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using TMPro;
+using UnityEngine.EventSystems;
 
 public class GameSystemManager : MonoBehaviour
 {
 
-    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeBoard;
+    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem;
 
     GameObject networkedClient;
 
@@ -15,9 +16,9 @@ public class GameSystemManager : MonoBehaviour
 
     GameObject infoStuff1, infoStuff2, tictactoeScene;
 
-    public Button[] ticTacToeButtonCellArray;
-    string playersTicTacToeSymbol, opponentsTicTacToeSymbol;
-    public bool myTurnToMove;
+    public Button[] ticTacToeCells;
+    string playersTurn, opponentsTurn;
+    public bool MoveP;
 
     void Start()
     {
@@ -48,7 +49,7 @@ public class GameSystemManager : MonoBehaviour
             else if (go.name == "TicTacToe")
                 tictactoeScene = go;
             else if (go.name == "TicTacToeBoard")
-                ticTacToeBoard = go;
+                ticTacToeSystem = go;
 
         }
 
@@ -56,10 +57,11 @@ public class GameSystemManager : MonoBehaviour
         toggleCreate.GetComponent<Toggle>().onValueChanged.AddListener(ToggleCreateValueChanged);
         toggleLogin.GetComponent<Toggle>().onValueChanged.AddListener(ToggleLoginValueChanged);
 
+        ticTacToeCells = ticTacToeSystem.GetComponentsInChildren<Button>();
+        AddListenersToButtonCellArray();
+
         findGameSessionButton.GetComponent<Button>().onClick.AddListener(FindGameSessionButtonPressed);
         placeHolderGameButton.GetComponent<Button>().onClick.AddListener(PlaceHolderGameButtonPressed);
-
-        ticTacToeButtonCellArray = ticTacToeBoard.GetComponentsInChildren<Button>();
 
         ChangeGameState(GameStates.Login);
     }
@@ -83,6 +85,14 @@ public class GameSystemManager : MonoBehaviour
 
     }
 
+    private void AddListenersToButtonCellArray()
+    {
+        foreach (Button button in ticTacToeCells)
+        {
+            button.onClick.AddListener(ButtonCellPressed);
+        }
+    }
+
     private void SubmitButtonPressed()
     {
 
@@ -96,6 +106,23 @@ public class GameSystemManager : MonoBehaviour
         
 
 
+    }
+
+    private void ButtonCellPressed()
+    {
+        Button button = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
+
+        for (int i = 0; i < ticTacToeCells.Length; i++)
+        {
+            if (button == ticTacToeCells[i] && buttonText.text == "" && MoveP == true)
+            {
+                MoveP = false;
+                buttonText.text = playersTurn;
+                networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.AnyMove + "," + i);
+                break;
+            }
+        }
     }
 
     private void ToggleCreateValueChanged(bool newValue)
@@ -120,6 +147,18 @@ public class GameSystemManager : MonoBehaviour
         Debug.Log("playing game");
     }
 
+    public void InitGameSymbolsSetCurrentTurn(string playerSymbol, string opponentSymbol, bool myTurn)
+    {
+        playersTurn = playerSymbol;
+        opponentsTurn = opponentSymbol;
+        MoveP = myTurn;
+    }
+
+    public void UpdateTicTacToeGridAfterMove(int cellNumber)
+    {
+        ticTacToeCells[cellNumber].GetComponentInChildren<TextMeshProUGUI>().text = opponentsTurn;
+    }
+
     public void ChangeGameState(int newState)
     {
         //inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate
@@ -134,7 +173,7 @@ public class GameSystemManager : MonoBehaviour
         placeHolderGameButton.SetActive(false);
         infoStuff1.SetActive(false);
         infoStuff2.SetActive(false);
-        tictactoeScene.SetActive(false);
+        ticTacToeSystem.SetActive(false);
 
         if (newState == GameStates.Login)
         {
@@ -155,14 +194,10 @@ public class GameSystemManager : MonoBehaviour
         {
 
         }
-        else if (newState == GameStates.PressTicTacToe)
-        {
-            placeHolderGameButton.SetActive(true);
-            
-        }
         else if (newState == GameStates.PlayingTicTacToe)
         {
-            tictactoeScene.SetActive(true); ;
+            placeHolderGameButton.SetActive(true);
+            ticTacToeSystem.SetActive(true);
 
         }
 
