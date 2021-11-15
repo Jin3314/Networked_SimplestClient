@@ -17,6 +17,7 @@ public class NetworkedClient : MonoBehaviour
     byte error;
     bool isConnected = false;
     int ourClientID;
+    string opponentsSymbol;
     GameObject gameSystemManager;
 
     // Start is called before the first frame update
@@ -130,7 +131,7 @@ public class NetworkedClient : MonoBehaviour
         {
             gameSystemManager.GetComponent<GameSystemManager>().ChangeGameState(GameStates.PlayingTicTacToe);
 
-            string opponentsSymbol = (csv[1] == "X") ? "O" : "X";
+            opponentsSymbol = (csv[1] == "X") ? "O" : "X";
 
             bool myTurn = (int.Parse(csv[2]) == 1) ? true : false;
 
@@ -147,6 +148,18 @@ public class NetworkedClient : MonoBehaviour
             gameSystemManager.GetComponent<GameSystemManager>().UpdateTicTacToeGridAfterMove(cellNumberOfMovePlayed);
 
             gameSystemManager.GetComponent<GameSystemManager>().MoveP = true;
+            gameSystemManager.GetComponent<GameSystemManager>().UpdatePlayersCurrentTurnText(true);
+
+        }
+        else if (signifier == ServerToClientSignifiers.OpponentWon)
+        {
+            gameSystemManager.GetComponent<GameSystemManager>().UpdateGameStatusText(opponentsSymbol + " Won!");
+            gameSystemManager.GetComponent<GameSystemManager>().MoveP = false;
+        }
+        else if (signifier == ServerToClientSignifiers.GameDrawn)
+        {
+            gameSystemManager.GetComponent<GameSystemManager>().UpdateGameStatusText("Game Drawn");
+            gameSystemManager.GetComponent<GameSystemManager>().MoveP = false;
         }
 
     }
@@ -170,6 +183,10 @@ public static class ClientToServerSignifiers
     public const int TicTacToePlay = 4;
 
     public const int AnyMove = 5;
+
+    public const int GameOver = 6;
+
+    public const int GameDrawn = 7;
 }
 
 
@@ -182,6 +199,10 @@ public static class ServerToClientSignifiers
     public const int OpponentTicTacToePlay = 3;
 
     public const int OpponentChoice = 4;
+
+    public const int OpponentWon = 5;
+
+    public const int GameDrawn = 6;
 }
 
 public static class LoginResponses

@@ -8,7 +8,7 @@ using UnityEngine.EventSystems;
 public class GameSystemManager : MonoBehaviour
 {
 
-    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem;
+    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem, gameStatusText;
 
     GameObject networkedClient;
 
@@ -19,6 +19,7 @@ public class GameSystemManager : MonoBehaviour
     public Button[] ticTacToeCells;
     string playersTurn, opponentsTurn;
     public bool MoveP;
+    int numberOfTotalMovesMade = 0;
 
     void Start()
     {
@@ -50,6 +51,9 @@ public class GameSystemManager : MonoBehaviour
                 tictactoeScene = go;
             else if (go.name == "TicTacToeBoard")
                 ticTacToeSystem = go;
+            else if (go.name == "GameStatusText")
+                gameStatusText = go;
+
 
         }
 
@@ -117,10 +121,22 @@ public class GameSystemManager : MonoBehaviour
         {
             if (button == ticTacToeCells[i] && buttonText.text == "" && MoveP == true)
             {
+                numberOfTotalMovesMade++;
+                Debug.Log("Number of moves made: " + numberOfTotalMovesMade);
                 MoveP = false;
+                UpdatePlayersCurrentTurnText(MoveP);
                 buttonText.text = playersTurn;
                 networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.AnyMove + "," + i);
-                break;
+                if (CheckIfGameOver())
+                {
+                    Debug.Log("Printing Symbols");
+                    for (int j = 0; j < 7; j += 3)
+                    {
+                        Debug.Log(ticTacToeCells[j].GetComponentInChildren<TextMeshProUGUI>().text + "," + ticTacToeCells[j + 1].GetComponentInChildren<TextMeshProUGUI>().text + "," + ticTacToeCells[j + 2].GetComponentInChildren<TextMeshProUGUI>().text);
+
+                    }
+                }
+                return;
             }
         }
     }
@@ -152,11 +168,87 @@ public class GameSystemManager : MonoBehaviour
         playersTurn = playerSymbol;
         opponentsTurn = opponentSymbol;
         MoveP = myTurn;
+        UpdatePlayersCurrentTurnText(MoveP);
     }
 
     public void UpdateTicTacToeGridAfterMove(int cellNumber)
     {
+        numberOfTotalMovesMade++;
         ticTacToeCells[cellNumber].GetComponentInChildren<TextMeshProUGUI>().text = opponentsTurn;
+    }
+
+    public void UpdatePlayersCurrentTurnText(bool myTurn)
+    {
+        gameStatusText.GetComponent<TextMeshProUGUI>().text = (myTurn == true) ? "Your Move" : "Opponents Move";
+    }
+
+    private void ResetAllCellButtonTextValues()
+    {
+        foreach (Button button in ticTacToeCells)
+        {
+            button.GetComponentInChildren<TextMeshProUGUI>().text = "";
+        }
+    }
+
+    public bool CheckIfGameOver()
+    {
+        //Earliest a game can be over is 5 moves so only start checking after the 5th move
+        if (numberOfTotalMovesMade >= 5)
+        {
+            if (CheckIfGameWon())
+            {
+                gameStatusText.GetComponent<TextMeshProUGUI>().text = playersTurn + " Won!";
+                networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.GameOver.ToString());
+                return true;
+            }
+            else if (numberOfTotalMovesMade == 9)
+            {
+                gameStatusText.GetComponent<TextMeshProUGUI>().text = "Game Drawn";
+                networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.GameDrawn.ToString());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool CheckIfGameWon()
+    {
+        //Checks for rows having same symbol
+        for (int i = 0; i < 7; i += 3)
+        {
+            string leftCell = ticTacToeCells[i].GetComponentInChildren<TextMeshProUGUI>().text;
+            string middleCell = ticTacToeCells[i + 1].GetComponentInChildren<TextMeshProUGUI>().text;
+            string rightCell = ticTacToeCells[i + 2].GetComponentInChildren<TextMeshProUGUI>().text;
+
+            if (leftCell != "" && leftCell == middleCell && leftCell == rightCell)
+                return true;
+        }
+        //Checks for columns having same symbol
+        for (int i = 0; i < 3; i++)
+        {
+            string topCell = ticTacToeCells[i].GetComponentInChildren<TextMeshProUGUI>().text;
+            string middleCell = ticTacToeCells[i + 3].GetComponentInChildren<TextMeshProUGUI>().text;
+            string bottomCell = ticTacToeCells[i + 6].GetComponentInChildren<TextMeshProUGUI>().text;
+
+            if (topCell != "" && topCell == middleCell && topCell == bottomCell)
+                return true;
+        }
+        //Checks for diagonals
+        string topLeftCorner = ticTacToeCells[0].GetComponentInChildren<TextMeshProUGUI>().text;
+        string middleGridCell = ticTacToeCells[4].GetComponentInChildren<TextMeshProUGUI>().text;
+        string topRightCorner = ticTacToeCells[2].GetComponentInChildren<TextMeshProUGUI>().text;
+
+        if (topLeftCorner != "" && topLeftCorner == middleGridCell & topLeftCorner == ticTacToeCells[8].GetComponentInChildren<TextMeshProUGUI>().text)
+            return true;
+        if (topRightCorner != "" && topRightCorner == middleGridCell && topRightCorner == ticTacToeCells[6].GetComponentInChildren<TextMeshProUGUI>().text)
+            return true;
+
+        return false;
+    }
+
+    public void UpdateGameStatusText(string gameText)
+    {
+        gameStatusText.GetComponent<TextMeshProUGUI>().text = gameText;
     }
 
     public void ChangeGameState(int newState)
@@ -174,6 +266,7 @@ public class GameSystemManager : MonoBehaviour
         infoStuff1.SetActive(false);
         infoStuff2.SetActive(false);
         ticTacToeSystem.SetActive(false);
+        gameStatusText.SetActive(false);
 
         if (newState == GameStates.Login)
         {
@@ -198,6 +291,9 @@ public class GameSystemManager : MonoBehaviour
         {
             placeHolderGameButton.SetActive(true);
             ticTacToeSystem.SetActive(true);
+            numberOfTotalMovesMade = 0;
+            gameStatusText.SetActive(true);
+            ResetAllCellButtonTextValues();
 
         }
 
