@@ -8,7 +8,7 @@ using UnityEngine.EventSystems;
 public class GameSystemManager : MonoBehaviour
 {
 
-    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem, WhosTurn, toggleObserver;
+    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem, WhosTurn, toggleObserver, replayButton;
 
     GameObject networkedClient;
 
@@ -59,6 +59,8 @@ public class GameSystemManager : MonoBehaviour
                 messages = go;
             else if (go.name == "observerToggle")
                 toggleObserver = go;
+            else if (go.name == "ReplayButton")
+                replayButton = go;
 
 
         }
@@ -70,6 +72,7 @@ public class GameSystemManager : MonoBehaviour
         findGameSessionButton.GetComponent<Button>().onClick.AddListener(FindGameSessionButtonPressed);
         placeHolderGameButton.GetComponent<Button>().onClick.AddListener(PlaceHolderGameButtonPressed);
         SendTextButton.GetComponent<Button>().onClick.AddListener(SendTextButtonPressed);
+        replayButton.GetComponent<Button>().onClick.AddListener(ReplayButtonPressed);
 
         GameSquare = ticTacToeSystem.GetComponentsInChildren<Button>();
         AddListenersOfTicTacToe();
@@ -215,6 +218,14 @@ public class GameSystemManager : MonoBehaviour
         Debug.Log("GLHF");
     }
 
+    private void ReplayButtonPressed()
+    {
+        //don't have any code for now, sorry.
+
+        Debug.Log("ReplayButton Pressed");
+    }
+
+
     public void UpdateTicTacToeGridAfterMove(int cellNumber)
     {
         HowManyTurns++;
@@ -292,6 +303,7 @@ public class GameSystemManager : MonoBehaviour
         SendTextButton.SetActive(false);
         messages.SetActive(false);
         toggleObserver.SetActive(false);
+        replayButton.SetActive(false);
 
         if (newState == GameStates.Login)
         {
@@ -303,6 +315,7 @@ public class GameSystemManager : MonoBehaviour
             infoStuff1.SetActive(true);
             infoStuff2.SetActive(true);
             toggleObserver.SetActive(true);
+            replayButton.SetActive(true);
         }
         else if(newState == GameStates.MainMenu)
         {
