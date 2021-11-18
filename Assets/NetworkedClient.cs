@@ -148,17 +148,20 @@ public class NetworkedClient : MonoBehaviour
             gameSystemManager.GetComponent<GameSystemManager>().UpdateTicTacToeGridAfterMove(cellNumberOfMovePlayed);
 
             gameSystemManager.GetComponent<GameSystemManager>().MoveP = true;
-            gameSystemManager.GetComponent<GameSystemManager>().UpdatePlayersCurrentTurnText(true);
+
+            gameSystemManager.GetComponent<GameSystemManager>().UpdateWhosTurnText(true);
 
         }
         else if (signifier == ServerToClientSignifiers.OpponentWon)
         {
-            gameSystemManager.GetComponent<GameSystemManager>().UpdateGameStatusText(opponentsSymbol + " Won!");
+            gameSystemManager.GetComponent<GameSystemManager>().Changerturn(opponentsSymbol + " You win!");
+
             gameSystemManager.GetComponent<GameSystemManager>().MoveP = false;
         }
-        else if (signifier == ServerToClientSignifiers.GameDrawn)
+        else if (signifier == ServerToClientSignifiers.Tie)
         {
-            gameSystemManager.GetComponent<GameSystemManager>().UpdateGameStatusText("Game Drawn");
+            gameSystemManager.GetComponent<GameSystemManager>().Changerturn("Tie");
+
             gameSystemManager.GetComponent<GameSystemManager>().MoveP = false;
         }
 
@@ -186,7 +189,7 @@ public static class ClientToServerSignifiers
 
     public const int GameOver = 6;
 
-    public const int GameDrawn = 7;
+    public const int Tie = 7;
 }
 
 
@@ -202,7 +205,7 @@ public static class ServerToClientSignifiers
 
     public const int OpponentWon = 5;
 
-    public const int GameDrawn = 6;
+    public const int Tie = 6;
 }
 
 public static class LoginResponses

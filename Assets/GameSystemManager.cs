@@ -8,18 +8,18 @@ using UnityEngine.EventSystems;
 public class GameSystemManager : MonoBehaviour
 {
 
-    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem, gameStatusText;
+    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem, WhosTurn, toggleObserver;
 
     GameObject networkedClient;
 
-    GameObject findGameSessionButton, placeHolderGameButton;
+    GameObject findGameSessionButton, placeHolderGameButton, SendTextButton;
 
-    GameObject infoStuff1, infoStuff2, tictactoeScene;
+    GameObject infoStuff1, infoStuff2, tictactoeScene, messages;
 
-    public Button[] ticTacToeCells;
+    public Button[] GameSquare;
     string playersTurn, opponentsTurn;
     public bool MoveP;
-    int numberOfTotalMovesMade = 0;
+    int HowManyTurns = 0;
 
     void Start()
     {
@@ -49,10 +49,16 @@ public class GameSystemManager : MonoBehaviour
                 infoStuff2 = go;
             else if (go.name == "TicTacToe")
                 tictactoeScene = go;
-            else if (go.name == "TicTacToeBoard")
+            else if (go.name == "TicTacToeSystem")
                 ticTacToeSystem = go;
-            else if (go.name == "GameStatusText")
-                gameStatusText = go;
+            else if (go.name == "WhosTurn")
+                WhosTurn = go;
+            else if (go.name == "SendTextButton")
+                SendTextButton = go;
+            else if (go.name == "Messages")
+                messages = go;
+            else if (go.name == "observerToggle")
+                toggleObserver = go;
 
 
         }
@@ -60,12 +66,13 @@ public class GameSystemManager : MonoBehaviour
         buttonSubmit.GetComponent<Button>().onClick.AddListener(SubmitButtonPressed);
         toggleCreate.GetComponent<Toggle>().onValueChanged.AddListener(ToggleCreateValueChanged);
         toggleLogin.GetComponent<Toggle>().onValueChanged.AddListener(ToggleLoginValueChanged);
-
-        ticTacToeCells = ticTacToeSystem.GetComponentsInChildren<Button>();
-        AddListenersToButtonCellArray();
-
+        toggleObserver.GetComponent<Toggle>().onValueChanged.AddListener(ToggleLoginValueChanged);
         findGameSessionButton.GetComponent<Button>().onClick.AddListener(FindGameSessionButtonPressed);
         placeHolderGameButton.GetComponent<Button>().onClick.AddListener(PlaceHolderGameButtonPressed);
+        SendTextButton.GetComponent<Button>().onClick.AddListener(SendTextButtonPressed);
+
+        GameSquare = ticTacToeSystem.GetComponentsInChildren<Button>();
+        AddListenersOfTicTacToe();
 
         ChangeGameState(GameStates.Login);
     }
@@ -89,11 +96,11 @@ public class GameSystemManager : MonoBehaviour
 
     }
 
-    private void AddListenersToButtonCellArray()
+    private void AddListenersOfTicTacToe()
     {
-        foreach (Button button in ticTacToeCells)
+        foreach (Button button in GameSquare)
         {
-            button.onClick.AddListener(ButtonCellPressed);
+            button.onClick.AddListener(ButtonPressed);
         }
     }
 
@@ -101,6 +108,7 @@ public class GameSystemManager : MonoBehaviour
     {
 
         string n = inputFieldUserName.GetComponent<InputField>().text;
+
         string p = inputFieldPassword.GetComponent<InputField>().text;
 
         if (toggleLogin.GetComponent<Toggle>().isOn)
@@ -112,33 +120,110 @@ public class GameSystemManager : MonoBehaviour
 
     }
 
-    private void ButtonCellPressed()
+    private void ButtonPressed()
     {
         Button button = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
         TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
 
-        for (int i = 0; i < ticTacToeCells.Length; i++)
+        for (int i = 0; i < GameSquare.Length; i++)
         {
-            if (button == ticTacToeCells[i] && buttonText.text == "" && MoveP == true)
+            if (button == GameSquare[i] && buttonText.text == "" && MoveP == true)
             {
-                numberOfTotalMovesMade++;
-                Debug.Log("Number of moves made: " + numberOfTotalMovesMade);
+                HowManyTurns++;
+
                 MoveP = false;
-                UpdatePlayersCurrentTurnText(MoveP);
+
+                UpdateWhosTurnText(MoveP);
+
                 buttonText.text = playersTurn;
+
                 networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.AnyMove + "," + i);
-                if (CheckIfGameOver())
+
+                if (GameOver())
                 {
                     Debug.Log("Printing Symbols");
                     for (int j = 0; j < 7; j += 3)
                     {
-                        Debug.Log(ticTacToeCells[j].GetComponentInChildren<TextMeshProUGUI>().text + "," + ticTacToeCells[j + 1].GetComponentInChildren<TextMeshProUGUI>().text + "," + ticTacToeCells[j + 2].GetComponentInChildren<TextMeshProUGUI>().text);
+                        Debug.Log(GameSquare[j].GetComponentInChildren<TextMeshProUGUI>().text + "," + GameSquare[j + 1].GetComponentInChildren<TextMeshProUGUI>().text 
+                        + "," + GameSquare[j + 2].GetComponentInChildren<TextMeshProUGUI>().text);
 
                     }
                 }
                 return;
             }
         }
+    }
+
+    bool GameWon()
+    {
+        for (int i = 0; i < 7; i += 3)
+        {
+
+            string left = GameSquare[i].GetComponentInChildren<TextMeshProUGUI>().text;
+
+            string mid = GameSquare[i + 1].GetComponentInChildren<TextMeshProUGUI>().text;
+
+            string right = GameSquare[i + 2].GetComponentInChildren<TextMeshProUGUI>().text;
+
+            if (left != "" && left == mid && left == right)
+                return true;
+        }
+        for (int i = 0; i < 3; i++)
+        {
+
+            string top = GameSquare[i].GetComponentInChildren<TextMeshProUGUI>().text;
+
+            string mid = GameSquare[i + 3].GetComponentInChildren<TextMeshProUGUI>().text;
+
+            string bottom = GameSquare[i + 6].GetComponentInChildren<TextMeshProUGUI>().text;
+
+            if (top != "" && top == mid && top == bottom)
+                return true;
+        }
+        string topleft = GameSquare[0].GetComponentInChildren<TextMeshProUGUI>().text;
+
+        string midG = GameSquare[4].GetComponentInChildren<TextMeshProUGUI>().text;
+
+        string topRight = GameSquare[2].GetComponentInChildren<TextMeshProUGUI>().text;
+
+        if (topleft != "" && topleft == midG & topleft == GameSquare[8].GetComponentInChildren<TextMeshProUGUI>().text)
+            return true;
+        if (topRight != "" && topRight == midG && topRight == GameSquare[6].GetComponentInChildren<TextMeshProUGUI>().text)
+            return true;
+
+        return false;
+    }
+
+    private void FindGameSessionButtonPressed()
+    {
+        networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.AddToGameSessionQueue + "");
+
+        ChangeGameState(GameStates.WaitingForMatch);
+    }
+
+    private void PlaceHolderGameButtonPressed()
+    {
+        networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.TicTacToePlay + "");
+
+        Debug.Log("playing game");
+    }
+
+    private void SendTextButtonPressed()
+    {
+        messages.GetComponent<Text>().text = "GLHF";
+
+        Debug.Log("GLHF");
+    }
+
+    public void UpdateTicTacToeGridAfterMove(int cellNumber)
+    {
+        HowManyTurns++;
+        GameSquare[cellNumber].GetComponentInChildren<TextMeshProUGUI>().text = opponentsTurn;
+    }
+
+    public void UpdateWhosTurnText(bool myTurn)
+    {
+        WhosTurn.GetComponent<TextMeshProUGUI>().text = (myTurn == true) ? "Your Turn" : "Opponents Turn";
     }
 
     private void ToggleCreateValueChanged(bool newValue)
@@ -151,111 +236,48 @@ public class GameSystemManager : MonoBehaviour
         toggleCreate.GetComponent<Toggle>().SetIsOnWithoutNotify(!newValue);
     }
 
-    private void FindGameSessionButtonPressed()
+    private void ToggleObserverValueChanged(bool newValue)
     {
-        networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.AddToGameSessionQueue + "" );
-        ChangeGameState(GameStates.WaitingForMatch);
+        toggleObserver.GetComponent<Toggle>().SetIsOnWithoutNotify(!newValue);
+        //Don't have any functions right now. sorry.
     }
 
-    private void PlaceHolderGameButtonPressed()
+    public bool GameOver()
     {
-        networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.TicTacToePlay + "");
-        Debug.Log("playing game");
+        if (HowManyTurns >= 5)
+        {
+            if (GameWon())
+            {
+                WhosTurn.GetComponent<TextMeshProUGUI>().text = playersTurn + " You win!";
+
+                networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.GameOver.ToString());
+                return true;
+            }
+            else if (HowManyTurns == 9)
+            {
+                WhosTurn.GetComponent<TextMeshProUGUI>().text = "Tie";
+
+                networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.Tie.ToString());
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public void Changerturn(string gameText)
+    {
+        WhosTurn.GetComponent<TextMeshProUGUI>().text = gameText;
     }
 
     public void InitGameSymbolsSetCurrentTurn(string playerSymbol, string opponentSymbol, bool myTurn)
     {
-        playersTurn = playerSymbol;
-        opponentsTurn = opponentSymbol;
-        MoveP = myTurn;
-        UpdatePlayersCurrentTurnText(MoveP);
+        playersTurn = playerSymbol; opponentsTurn = opponentSymbol; MoveP = myTurn;
+
+        UpdateWhosTurnText(MoveP);
     }
-
-    public void UpdateTicTacToeGridAfterMove(int cellNumber)
-    {
-        numberOfTotalMovesMade++;
-        ticTacToeCells[cellNumber].GetComponentInChildren<TextMeshProUGUI>().text = opponentsTurn;
-    }
-
-    public void UpdatePlayersCurrentTurnText(bool myTurn)
-    {
-        gameStatusText.GetComponent<TextMeshProUGUI>().text = (myTurn == true) ? "Your Move" : "Opponents Move";
-    }
-
-    private void ResetAllCellButtonTextValues()
-    {
-        foreach (Button button in ticTacToeCells)
-        {
-            button.GetComponentInChildren<TextMeshProUGUI>().text = "";
-        }
-    }
-
-    public bool CheckIfGameOver()
-    {
-        //Earliest a game can be over is 5 moves so only start checking after the 5th move
-        if (numberOfTotalMovesMade >= 5)
-        {
-            if (CheckIfGameWon())
-            {
-                gameStatusText.GetComponent<TextMeshProUGUI>().text = playersTurn + " Won!";
-                networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.GameOver.ToString());
-                return true;
-            }
-            else if (numberOfTotalMovesMade == 9)
-            {
-                gameStatusText.GetComponent<TextMeshProUGUI>().text = "Game Drawn";
-                networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.GameDrawn.ToString());
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool CheckIfGameWon()
-    {
-        //Checks for rows having same symbol
-        for (int i = 0; i < 7; i += 3)
-        {
-            string leftCell = ticTacToeCells[i].GetComponentInChildren<TextMeshProUGUI>().text;
-            string middleCell = ticTacToeCells[i + 1].GetComponentInChildren<TextMeshProUGUI>().text;
-            string rightCell = ticTacToeCells[i + 2].GetComponentInChildren<TextMeshProUGUI>().text;
-
-            if (leftCell != "" && leftCell == middleCell && leftCell == rightCell)
-                return true;
-        }
-        //Checks for columns having same symbol
-        for (int i = 0; i < 3; i++)
-        {
-            string topCell = ticTacToeCells[i].GetComponentInChildren<TextMeshProUGUI>().text;
-            string middleCell = ticTacToeCells[i + 3].GetComponentInChildren<TextMeshProUGUI>().text;
-            string bottomCell = ticTacToeCells[i + 6].GetComponentInChildren<TextMeshProUGUI>().text;
-
-            if (topCell != "" && topCell == middleCell && topCell == bottomCell)
-                return true;
-        }
-        //Checks for diagonals
-        string topLeftCorner = ticTacToeCells[0].GetComponentInChildren<TextMeshProUGUI>().text;
-        string middleGridCell = ticTacToeCells[4].GetComponentInChildren<TextMeshProUGUI>().text;
-        string topRightCorner = ticTacToeCells[2].GetComponentInChildren<TextMeshProUGUI>().text;
-
-        if (topLeftCorner != "" && topLeftCorner == middleGridCell & topLeftCorner == ticTacToeCells[8].GetComponentInChildren<TextMeshProUGUI>().text)
-            return true;
-        if (topRightCorner != "" && topRightCorner == middleGridCell && topRightCorner == ticTacToeCells[6].GetComponentInChildren<TextMeshProUGUI>().text)
-            return true;
-
-        return false;
-    }
-
-    public void UpdateGameStatusText(string gameText)
-    {
-        gameStatusText.GetComponent<TextMeshProUGUI>().text = gameText;
-    }
-
     public void ChangeGameState(int newState)
     {
-        //inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate
-        // findGameSessionButton, placeHolderGameButton
-
         inputFieldUserName.SetActive(false);
         inputFieldPassword.SetActive(false);
         buttonSubmit.SetActive(false);
@@ -266,7 +288,10 @@ public class GameSystemManager : MonoBehaviour
         infoStuff1.SetActive(false);
         infoStuff2.SetActive(false);
         ticTacToeSystem.SetActive(false);
-        gameStatusText.SetActive(false);
+        WhosTurn.SetActive(false);
+        SendTextButton.SetActive(false);
+        messages.SetActive(false);
+        toggleObserver.SetActive(false);
 
         if (newState == GameStates.Login)
         {
@@ -277,7 +302,7 @@ public class GameSystemManager : MonoBehaviour
             toggleCreate.SetActive(true);
             infoStuff1.SetActive(true);
             infoStuff2.SetActive(true);
-
+            toggleObserver.SetActive(true);
         }
         else if(newState == GameStates.MainMenu)
         {
@@ -289,11 +314,12 @@ public class GameSystemManager : MonoBehaviour
         }
         else if (newState == GameStates.PlayingTicTacToe)
         {
-            placeHolderGameButton.SetActive(true);
+            placeHolderGameButton.SetActive(false);
             ticTacToeSystem.SetActive(true);
-            numberOfTotalMovesMade = 0;
-            gameStatusText.SetActive(true);
-            ResetAllCellButtonTextValues();
+            HowManyTurns = 0;
+            WhosTurn.SetActive(true);
+            SendTextButton.SetActive(true);
+            messages.SetActive(true);
 
         }
 
