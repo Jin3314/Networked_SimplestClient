@@ -8,13 +8,13 @@ using UnityEngine.EventSystems;
 public class GameSystemManager : MonoBehaviour
 {
 
-    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem, WhosTurn, toggleObserver, replayButton;
+    GameObject inputFieldUserName, inputFieldPassword, buttonSubmit, toggleLogin, toggleCreate, ticTacToeSystem, WhosTurn /*toggleObserver,replayButton*/;
 
     GameObject networkedClient;
 
     GameObject findGameSessionButton, placeHolderGameButton, SendTextButton;
 
-    GameObject infoStuff1, infoStuff2, tictactoeScene, messages;
+    GameObject UserName, Password, messages;
 
     public Button[] GameSquare;
     string playersTurn, opponentsTurn;
@@ -44,11 +44,9 @@ public class GameSystemManager : MonoBehaviour
             else if (go.name == "PlaceHolderGameButton")
                 placeHolderGameButton = go;
             else if (go.name == "InfoText1")
-                infoStuff1 = go;
+                UserName = go;
             else if (go.name == "InfoText2")
-                infoStuff2 = go;
-            else if (go.name == "TicTacToe")
-                tictactoeScene = go;
+                Password = go;
             else if (go.name == "TicTacToeSystem")
                 ticTacToeSystem = go;
             else if (go.name == "WhosTurn")
@@ -57,22 +55,21 @@ public class GameSystemManager : MonoBehaviour
                 SendTextButton = go;
             else if (go.name == "Messages")
                 messages = go;
-            else if (go.name == "observerToggle")
+            /*  else if (go.name == "observerToggle")
                 toggleObserver = go;
             else if (go.name == "ReplayButton")
                 replayButton = go;
-
-
+            */
         }
 
         buttonSubmit.GetComponent<Button>().onClick.AddListener(SubmitButtonPressed);
         toggleCreate.GetComponent<Toggle>().onValueChanged.AddListener(ToggleCreateValueChanged);
         toggleLogin.GetComponent<Toggle>().onValueChanged.AddListener(ToggleLoginValueChanged);
-        toggleObserver.GetComponent<Toggle>().onValueChanged.AddListener(ToggleLoginValueChanged);
+        //toggleObserver.GetComponent<Toggle>().onValueChanged.AddListener(ToggleLoginValueChanged);
         findGameSessionButton.GetComponent<Button>().onClick.AddListener(FindGameSessionButtonPressed);
         placeHolderGameButton.GetComponent<Button>().onClick.AddListener(PlaceHolderGameButtonPressed);
         SendTextButton.GetComponent<Button>().onClick.AddListener(SendTextButtonPressed);
-        replayButton.GetComponent<Button>().onClick.AddListener(ReplayButtonPressed);
+        //replayButton.GetComponent<Button>().onClick.AddListener(ReplayButtonPressed);
 
         GameSquare = ticTacToeSystem.GetComponentsInChildren<Button>();
         AddListenersOfTicTacToe();
@@ -80,22 +77,8 @@ public class GameSystemManager : MonoBehaviour
         ChangeGameState(GameStates.Login);
     }
 
-    // Update is called once per frame
     void Update()
     {
-
-
-        /*  if (Input.GetKeyDown(KeyCode.A))
-            ChangeGameState(GameStates.Login);
-
-        if (Input.GetKeyDown(KeyCode.S))
-            ChangeGameState(GameStates.MainMenu);
-
-        if (Input.GetKeyDown(KeyCode.D))
-            ChangeGameState(GameStates.WaitingForMatch);
-
-        if (Input.GetKeyDown(KeyCode.F))
-            ChangeGameState(GameStates.PlayingTicTacToe); */
 
     }
 
@@ -109,7 +92,6 @@ public class GameSystemManager : MonoBehaviour
 
     private void SubmitButtonPressed()
     {
-
         string n = inputFieldUserName.GetComponent<InputField>().text;
 
         string p = inputFieldPassword.GetComponent<InputField>().text;
@@ -118,9 +100,6 @@ public class GameSystemManager : MonoBehaviour
             networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.Login + "," + n + "," + p);
         else
             networkedClient.GetComponent<NetworkedClient>().SendMessageToHost(ClientToServerSignifiers.CreateAccount + "," + n + "," + p);
-        
-
-
     }
 
     private void ButtonPressed()
@@ -161,7 +140,6 @@ public class GameSystemManager : MonoBehaviour
     {
         for (int i = 0; i < 7; i += 3)
         {
-
             string left = GameSquare[i].GetComponentInChildren<TextMeshProUGUI>().text;
 
             string mid = GameSquare[i + 1].GetComponentInChildren<TextMeshProUGUI>().text;
@@ -169,11 +147,13 @@ public class GameSystemManager : MonoBehaviour
             string right = GameSquare[i + 2].GetComponentInChildren<TextMeshProUGUI>().text;
 
             if (left != "" && left == mid && left == right)
+            {
                 return true;
+            }
+               
         }
         for (int i = 0; i < 3; i++)
         {
-
             string top = GameSquare[i].GetComponentInChildren<TextMeshProUGUI>().text;
 
             string mid = GameSquare[i + 3].GetComponentInChildren<TextMeshProUGUI>().text;
@@ -181,18 +161,25 @@ public class GameSystemManager : MonoBehaviour
             string bottom = GameSquare[i + 6].GetComponentInChildren<TextMeshProUGUI>().text;
 
             if (top != "" && top == mid && top == bottom)
+            {
                 return true;
+            }
+               
         }
         string topleft = GameSquare[0].GetComponentInChildren<TextMeshProUGUI>().text;
-
         string midG = GameSquare[4].GetComponentInChildren<TextMeshProUGUI>().text;
-
         string topRight = GameSquare[2].GetComponentInChildren<TextMeshProUGUI>().text;
 
         if (topleft != "" && topleft == midG & topleft == GameSquare[8].GetComponentInChildren<TextMeshProUGUI>().text)
+        {
             return true;
+        }
+            
         if (topRight != "" && topRight == midG && topRight == GameSquare[6].GetComponentInChildren<TextMeshProUGUI>().text)
+        {
             return true;
+        }
+            
 
         return false;
     }
@@ -218,12 +205,10 @@ public class GameSystemManager : MonoBehaviour
         Debug.Log("GLHF");
     }
 
-    private void ReplayButtonPressed()
+    /* private void ReplayButtonPressed()
     {
-        //don't have any code for now, sorry.
-
         Debug.Log("ReplayButton Pressed");
-    }
+    }*/
 
 
     public void UpdateTicTacToeGridAfterMove(int cellNumber)
@@ -247,11 +232,11 @@ public class GameSystemManager : MonoBehaviour
         toggleCreate.GetComponent<Toggle>().SetIsOnWithoutNotify(!newValue);
     }
 
-    private void ToggleObserverValueChanged(bool newValue)
+    /* private void ToggleObserverValueChanged(bool newValue)
     {
         toggleObserver.GetComponent<Toggle>().SetIsOnWithoutNotify(!newValue);
-        //Don't have any functions right now. sorry.
-    }
+    }*/
+
 
     public bool GameOver()
     {
@@ -275,7 +260,6 @@ public class GameSystemManager : MonoBehaviour
         return false;
     }
 
-
     public void Changerturn(string gameText)
     {
         WhosTurn.GetComponent<TextMeshProUGUI>().text = gameText;
@@ -296,14 +280,14 @@ public class GameSystemManager : MonoBehaviour
         toggleCreate.SetActive(false);
         findGameSessionButton.SetActive(false);
         placeHolderGameButton.SetActive(false);
-        infoStuff1.SetActive(false);
-        infoStuff2.SetActive(false);
+        UserName.SetActive(false);
+        Password.SetActive(false);
         ticTacToeSystem.SetActive(false);
         WhosTurn.SetActive(false);
         SendTextButton.SetActive(false);
         messages.SetActive(false);
-        toggleObserver.SetActive(false);
-        replayButton.SetActive(false);
+        //toggleObserver.SetActive(false);
+        //replayButton.SetActive(false);
 
         if (newState == GameStates.Login)
         {
@@ -312,10 +296,10 @@ public class GameSystemManager : MonoBehaviour
             buttonSubmit.SetActive(true);
             toggleLogin.SetActive(true);
             toggleCreate.SetActive(true);
-            infoStuff1.SetActive(true);
-            infoStuff2.SetActive(true);
-            toggleObserver.SetActive(true);
-            replayButton.SetActive(true);
+            UserName.SetActive(true);
+            Password.SetActive(true);
+            //toggleObserver.SetActive(true);
+            //replayButton.SetActive(true);
         }
         else if(newState == GameStates.MainMenu)
         {

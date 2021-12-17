@@ -20,7 +20,6 @@ public class NetworkedClient : MonoBehaviour
     string opponentsSymbol;
     GameObject gameSystemManager;
 
-    // Start is called before the first frame update
     void Start()
     {
         GameObject[] allObjects = UnityEngine.Object.FindObjectsOfType<GameObject>();
@@ -33,12 +32,8 @@ public class NetworkedClient : MonoBehaviour
             Connect();
     }
 
-    // Update is called once per frame
     void Update()
     {
-       // if(Input.GetKeyDown(KeyCode.S))
-        //    SendMessageToHost("Hello from client");
-
         UpdateNetworkConnection();
     }
 
@@ -63,7 +58,6 @@ public class NetworkedClient : MonoBehaviour
                 case NetworkEventType.DataEvent:
                     string msg = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                     ProcessRecievedMsg(msg, recConnectionID);
-                    //Debug.Log("got msg = " + msg);
                     break;
                 case NetworkEventType.DisconnectEvent:
                     isConnected = false;
